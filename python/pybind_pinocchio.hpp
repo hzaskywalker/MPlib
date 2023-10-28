@@ -19,10 +19,10 @@ using DATATYPE = double;
 #endif
 
 using PinocchioModel = PinocchioModelTpl<DATATYPE>;
-DEFINE_TEMPLATE_EIGEN(DATATYPE)
 
 
 void build_pypinocchio(py::module &m_all) {
+    DEFINE_TEMPLATE_EIGEN(DATATYPE)
     auto m = m_all.def_submodule("pinocchio");
     auto PyPinocchioModel = py::class_<PinocchioModel, std::shared_ptr<PinocchioModel>>(m, "PinocchioModel");
 

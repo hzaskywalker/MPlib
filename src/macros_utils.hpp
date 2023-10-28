@@ -1,5 +1,6 @@
 #pragma once
 #ifndef USE_TEMPLATE_EIGEN
+
 #define USE_TEMPLATE_EIGEN
 #define DEFINE_TEMPLATE_EIGEN(DATATYPE) \
     using VectorX = Eigen::Matrix<DATATYPE, Eigen::Dynamic, 1>;\
