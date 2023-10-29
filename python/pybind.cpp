@@ -4,6 +4,7 @@
 #include "pybind_fcl.hpp"
 #include "pybind_kdl.hpp"
 #include "pybind_ompl.hpp"
+#include "pybind_control_based.hpp"
 #include "pybind_pinocchio.hpp"
 #include "pybind_planning_world.hpp"
 
@@ -17,5 +18,6 @@ PYBIND11_MODULE(pymp, m) {
   build_pyarticulation(m);
   build_planning_world(m);
   build_pyompl(m);
+  build_pycontrol(m);
   // build_pytopp(m);
 }

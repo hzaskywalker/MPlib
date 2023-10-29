@@ -1,3 +1,4 @@
+#pragma once
 #include <pinocchio/fwd.hpp>
 #include <ompl/geometric/SimpleSetup.h>
 #include <ompl/geometric/PathSimplifier.h>
