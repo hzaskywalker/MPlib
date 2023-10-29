@@ -70,7 +70,8 @@ class MobileRobotModel
 
         dstate[0] = u[0] * cos(theta);
         dstate[1] = u[0] * sin(theta);
-        dstate[2] = u[0] * tan(u[1]) / carLength;
+        //dstate[2] = u[0] * tan(u[1]) / carLength;
+        dstate[2] = u[1];
         for(int i = 3; i < dstate.size(); i++) 
             dstate[i] = u[i-1];
 
