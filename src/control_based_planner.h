@@ -15,6 +15,7 @@
 #include <ompl/control/spaces/RealVectorControlSpace.h>
 #include <ompl/control/SimpleSetup.h>
 #include <ompl/control/planners/kpiece/KPIECE1.h>
+#include <ompl/control/planners/rrt/RRT.h>
 #include <ompl/config.h>
 
 #include "ompl_planner.h"
@@ -41,37 +42,67 @@ class MobileRobotModel
   
 //  typedef std::shared_ptr <ob::CompoundStateSpace> CompoundStateSpace_ptr;
  private:
-    const ob::CompoundStateSpace* space;
+    ob::CompoundStateSpace* space;
     const std::shared_ptr<oc::SpaceInformation> &si;
     const double carLength;
+    int n;
 
  public:
   
-     MobileRobotModel(const  std::shared_ptr<oc::SpaceInformation>& si_) : space(si->getStateSpace()->as<ob::CompoundStateSpace>()), si(si_), carLength(0.2){}
+     MobileRobotModel(const  std::shared_ptr<oc::SpaceInformation>& si_): si(si_), carLength(0.2){
+        // std::cout << "MobileRobotModel" << std::endl;
+
+        space = si->getStateSpace()->as<ob::CompoundStateSpace>();
+        // std::cout << "get space.." << std::endl;
+        n = space->getDimension();
+        // std::cout << "space dimension (in mobile robot): " << n << std::endl;
+    }
      void operator()(const ob::State *state, const oc::Control *control, std::valarray<double> &dstate) const
      {
         auto state_vec = state2vector<DATATYPE>(state, si.get());
         auto theta = state_vec[2];
         const double *u = control->as<oc::RealVectorControlSpace::ControlType>()->values;
 
+        dstate.resize(n);
+        // for(int i = 0; i < dstate.size() - 1; i++) {
+        //     std:: cout<< "u[" << i << "]: " << u[i] << std::endl;
+        // }
+
         dstate[0] = u[0] * cos(theta);
         dstate[1] = u[0] * sin(theta);
         dstate[2] = u[0] * tan(u[1]) / carLength;
         for(int i = 3; i < dstate.size(); i++) 
             dstate[i] = u[i-1];
+
+        // std:: cout<< "dstate size: " << dstate.size() << std::endl;
+        // for(int i = 0; i < dstate.size(); i++) {
+        //     std:: cout<< "dstate[" << i << "]: " << dstate[i] << " ";
+        // }
+        // std:: cout<< std::endl;
      }
   
      void update(ob::State *state, const std::valarray<double> &dstate) const
      {
-        ob::CompoundState *s = space->allocState()->as<ob::CompoundState>();
+        // std:: cout << "start update" << " " << dstate.size() << std::endl;
+        // std:: cout << "before update" <<" " << state2eigen<DATATYPE>(state, si.get()) << std::endl;
+        auto s = state->as<ob::CompoundState>();
         for (size_t i = 0; i < dstate.size(); ++i) {
-            auto v = space->as<ob::RealVectorStateSpace>(i);
-            auto sub = s->as<ob::RealVectorStateSpace::StateType>(i);
-            sub->as<ob::RealVectorStateSpace::StateType>()->values[0] += dstate[i];
+            // std:: cout << "update: " << i << std::endl;
+            if(i != 2){
+                auto v = space->as<ob::RealVectorStateSpace>(i);
+                auto sub = s->as<ob::RealVectorStateSpace::StateType>(i);
+                sub->as<ob::RealVectorStateSpace::StateType>()->values[0] += dstate[i];
+                v->enforceBounds(sub);
+            }
+            else{
+                auto v = space->as<ob::SO2StateSpace>(i);
+                auto sub = s->as<ob::SO2StateSpace::StateType>(i);
+                sub->as<ob::SO2StateSpace::StateType>()->value += dstate[i];
+                v->enforceBounds(sub);
+            }
         }
-        std::vector <DATATYPE> ret;
-        for(int i =0; i < dstate.size(); i++)
-            ret.push_back(dstate[i]);
+        // std:: cout << "finish update" <<" " << state2eigen<DATATYPE>(state, si.get()) << std::endl;
+        // std:: cout << "finish update" << std::endl;
      }
   
  };
@@ -83,28 +114,35 @@ class MobileRobotModel
 
  public:
   
-     EulerIntegrator(const std::shared_ptr<oc::SpaceInformation>& si, double timeStep): space_(
-        si->getStateSpace()->as<ob::CompoundStateSpace>()
-    ), timeStep_(timeStep), ode_(si)
+     EulerIntegrator(const std::shared_ptr<oc::SpaceInformation>& si, double timeStep): ode_(si)//: space_(
+        //si->getStateSpace()->as<ob::CompoundStateSpace>()
+     //), timeStep_(timeStep), ode_(si)
      {
+        std:: cout << "EulerIntegrator" << std::endl;
+        space_ = si->getStateSpace()->as<ob::CompoundStateSpace>();
+        std:: cout << "EulerIntegrator: finish space" << std::endl;
+        timeStep_ = timeStep;
+        std:: cout << "EulerIntegrator: finish timeSteps" << std::endl;
      }
   
      void propagate(const ob::State *start, const oc::Control *control, const double duration, ob::State *result) const
      {
-         double t = 0;
-         std::valarray<double> dstate;
-         space_->copyState(result, start);
-         while (t+timeStep_ < duration + std::numeric_limits<double>::epsilon())
-         {
-             ode_(result, control, dstate);
-             ode_.update(result, timeStep_ * dstate);
-             t += timeStep_;
-         }
-         if (t + std::numeric_limits<double>::epsilon() < duration)
-         {
-             ode_(result, control, dstate);
-             ode_.update(result, (duration-t) * dstate);
-         }
+        // std::cout << "propagate" << std::endl;
+        double t = 0;
+        std::valarray<double> dstate;
+        space_->copyState(result, start);
+        while (t+timeStep_ < duration + std::numeric_limits<double>::epsilon())
+        {
+            // std::cout << "propagate: while" << " " << timeStep_ << " " << duration << std::endl;
+            ode_(result, control, dstate);
+            ode_.update(result, timeStep_ * dstate);
+            t += timeStep_;
+        }
+        if (t + std::numeric_limits<double>::epsilon() < duration)
+        {
+            ode_(result, control, dstate);
+            ode_.update(result, (duration-t) * dstate);
+        }
      }
   
      double getTimeStep() const
@@ -175,7 +213,6 @@ class ControlBasedPlannerTpl {
 
     CompoundStateSpace_ptr cs;
     SpaceInformation_ptr si;
-    ProblemDefinition_ptr pdef;
     ControlSpace_ptr cspace;
     std::shared_ptr <MobileStatePropagator<DATATYPE>> propagator;
 
@@ -200,7 +237,7 @@ public:
 
     std::pair <std::string, Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic>>
     plan(VectorX const &start_state, std::vector<VectorX> const &goal_states, const std::string &planner_name = "RRTConnect",
-        const double &time = 1.0, const double& range = 0.0, const bool &verbose = false);
+        const double &time = 1.0, const double& range = 0.0, const bool &verbose = false, const double& integration_step=0.01);
 };
 
 

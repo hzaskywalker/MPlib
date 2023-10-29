@@ -84,17 +84,22 @@ namespace og = ompl::geometric;
 template<typename DATATYPE>
 ControlBasedPlannerTpl<DATATYPE>::ControlBasedPlannerTpl(PlanningWorldTpl_ptr<DATATYPE> const &world):world(world) {
     build_state_space();
+    //std::cout << "State space dimension: " << dim << std::endl;
     cspace = std::make_shared<oc::RealVectorControlSpace>(cs, dim-1);
-    //si = std::make_shared<SpaceInformation>(cs, cspace);
+
+    //std::cout << "Control space dimension: " << cspace->getDimension() << std::endl;
     ss = std::make_shared<oc::SimpleSetup>(cspace);
+    //std:: cout << "Simple setup" << std::endl;
+    si = ss->getSpaceInformation();
+    //std:: cout << "Space information" << std::endl;
+
     valid_checker = std::make_shared<ValidityChecker>(world, si);
     ss->setStateValidityChecker(valid_checker);
-    si = ss->getSpaceInformation();
+    //std:: cout << "State validity checker" << std::endl;
 
     propagator = std::make_shared<MobileStatePropagator<DATATYPE>>(si);
     ss->setStatePropagator(propagator);
-
-    //pdef = std::make_shared<ob::ProblemDefinition>(si);
+    //std:: cout << "State propagator" << std::endl;
 }
 
 template<typename DATATYPE>
@@ -105,7 +110,8 @@ ControlBasedPlannerTpl<DATATYPE>::plan(
     const std::string &planner_name,
     const double &time,
     const double& range, 
-    const bool& verbose
+    const bool& verbose,
+    const double& integration_step
 ) {
     ASSERT(start_state.rows() == goal_states[0].rows(), "Length of start state and goal state should be equal");
     ASSERT(start_state.rows() == dim, "Length of start state and problem dimension should be equal");
@@ -175,43 +181,17 @@ ControlBasedPlannerTpl<DATATYPE>::plan(
     if (verbose)
         std::cout << "number of goal state: " << tot_goal_state << std::endl;
 
-
-    //pdef->clearStartStates();
-    //pdef->clearGoal();
-    //pdef->clearSolutionPaths();
-    //pdef->clearSolutionNonExistenceProof();
-    //pdef->setStartAndGoalStates(start, goal);
-    //pdef->setGoal(goals);
-    //pdef->addStartState(start);
-    //ss->setStartAndGoalStates(start, goals);
     ss->clear();
-    //ss->clearStartStates();
-    //ss->clearGoal();
     ss->setStartState(start);
     ss->setGoal(goals);
     ss->setup();
+    si->setPropagationStepSize(range);
+    propagator->setIntegrationTimeStep(integration_step);
 
-
-    ob::PlannerPtr planner;
-    if (planner_name == "RRTConnect")
-    {
-        //auto rrt_connect = std::make_shared<og::RRTConnect>(si);
-        //if (range > 1E-6)
-        //    rrt_connect->setRange(range);
-        //planner = rrt_connect;
-        planner = std::make_shared<oc::KPIECE1>(si);
-    }
-    else
-        throw std::runtime_error("Planner Not implemented");
-
-    // planner->setProblemDefinition(pdef);
-
-    propagator->setIntegrationTimeStep(si->getPropagationStepSize());
-
-    // planner->setup();
     if (verbose)
         std::cout << "OMPL setup" << std::endl;
-    ob::PlannerStatus solved = planner->ob::Planner::solve(time);
+    ob::PlannerStatus solved = ss->solve(time);
+    
     if (solved) {
         if (verbose)
             std::cout << "Solved!" << std::endl;

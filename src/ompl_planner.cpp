@@ -107,7 +107,7 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state, std::vector<VectorX> 
 
     bool invalid_start = !valid_checker->_isValid(start_state);
     if (invalid_start) {
-        std::cout << "invalid start state!! (collision)" << std::endl;
+        //std::cout << "invalid start state!! (collision)" << std::endl;
         VectorX new_start_state = random_sample_nearby(start_state);
         start = eigen2vector<DATATYPE, double>(new_start_state);
     }

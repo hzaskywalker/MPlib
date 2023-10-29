@@ -92,8 +92,8 @@ public:
             : ob::StateValidityChecker(si), world(world) {}
 
     bool isValid(const ob::State *state_raw) const {
-        //std::cout << "Begin to check state" << std::endl;
-        //std::cout << "check " << state2eigen<DATATYPE>(state_raw, si_) << std::endl;
+        // std::cout << "Begin to check state" << std::endl;
+        // std::cout << "check " << state2eigen<DATATYPE>(state_raw, si_) << std::endl;
         world->setQposAll(state2eigen<DATATYPE>(state_raw, si_));
         return !world->collide();
     }

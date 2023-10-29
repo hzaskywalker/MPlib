@@ -29,7 +29,14 @@ void build_pycontrol(py::module &m_all) {
 
     auto PyControlBasedPlanner = py::class_<ControlBasedPlanner, std::shared_ptr<ControlBasedPlanner>>(m, "ControlBasedPlanner");
     PyControlBasedPlanner.def(py::init<PlanningWorldTpl_ptr<DATATYPE> const &>(), py::arg("world"))
-            .def("plan", &ControlBasedPlanner::plan, py::arg("start_state"), py::arg("goal_states"),
-                py::arg("planner_name") = "RRTConnect",  py::arg("time") = 1.0, py::arg("range") = 0.0, py::arg("verbose") = false);
+            .def("plan", &ControlBasedPlanner::plan, 
+                py::arg("start_state"), 
+                py::arg("goal_states"),
+                py::arg("planner_name") = "RRTConnect",  
+                py::arg("time") = 1.0, 
+                py::arg("range") = 0.0, 
+                py::arg("verbose") = false,
+                py::arg("integration_step") = 0.01
+            );
 
 }
