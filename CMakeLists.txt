@@ -19,7 +19,7 @@ find_package(orocos_kdl REQUIRED)
 find_package(urdfdom REQUIRED)
 
 include_directories("/usr/include/eigen3")
-include_directories("/usr/local/include/ompl-1.5")
+include_directories("/usr/local/include/ompl-1.6") # -1.5")
 include_directories("src")
 
 # store libries in a variable

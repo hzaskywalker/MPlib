@@ -4,10 +4,11 @@
 #include <ompl/geometric/PathSimplifier.h>
 #include <ompl/geometric/planners/rrt/RRTstar.h>
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
-//#include <ompl/geometric/PathSimplifier.h>
+#include <ompl/geometric/PathSimplifier.h>
 #include <ompl/util/RandomNumbers.h>
 #include <ompl/base/samplers/ObstacleBasedValidStateSampler.h>
 #include <ompl/base/SpaceInformation.h>
+#include <ompl/base/spaces/DubinsStateSpace.h>
 #include <ompl/base/StateSpace.h>
 #include <ompl/base/goals/GoalStates.h>
 #include <ompl/base/objectives/PathLengthOptimizationObjective.h>
@@ -17,10 +18,11 @@
 #include <ompl/base/spaces/SO2StateSpace.h>
 #include "planning_world.h"
 
-namespace ob = ompl::base;
-//namespace oc = ompl::control;
-namespace og = ompl::geometric;
 
+namespace dubins{
+
+namespace ob = ompl::base;
+namespace og = ompl::geometric;
 
 template<typename DATATYPE>
 std::vector <DATATYPE> state2vector(const ob::State *state_raw, ob::SpaceInformation *const &si_) {
@@ -31,6 +33,7 @@ std::vector <DATATYPE> state2vector(const ob::State *state_raw, ob::SpaceInforma
     for (size_t i = 0; i < si->getSubspaceCount(); i++) {
         auto subspace(si->getSubspace(i));
         size_t n;
+        const ob::DubinsStateSpace:: StateType* dubins_state;
         switch (subspace->getType()) {
             case ob::STATE_SPACE_REAL_VECTOR:
                 n = subspace->as<ob::RealVectorStateSpace>()->getDimension();
@@ -39,6 +42,12 @@ std::vector <DATATYPE> state2vector(const ob::State *state_raw, ob::SpaceInforma
                 break;
             case ob::STATE_SPACE_SO2:
                 ret.push_back((DATATYPE) (*state)[i]->as<ob::SO2StateSpace::StateType>()->value);
+                break;
+            case ob::STATE_SPACE_DUBINS:
+                dubins_state = (*state)[i]->as<ob::DubinsStateSpace::StateType>();
+                ret.push_back((DATATYPE) dubins_state->getX());
+                ret.push_back((DATATYPE) dubins_state->getY());
+                ret.push_back((DATATYPE) dubins_state->getYaw());
                 break;
             default:
                 throw std::invalid_argument("Unhandled subspace type.");
@@ -164,3 +173,5 @@ using OMPLPlannerTplf_ptr = OMPLPlannerTpl_ptr<float>;
 using OMPLPlannerTpld = OMPLPlannerTpl<double>;
 using OMPLPlannerTplf = OMPLPlannerTpl<float>;
 
+
+}

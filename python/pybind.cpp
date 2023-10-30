@@ -7,6 +7,7 @@
 #include "pybind_control_based.hpp"
 #include "pybind_pinocchio.hpp"
 #include "pybind_planning_world.hpp"
+#include "pybind_dubins.hpp"
 
 namespace py = pybind11;
 
@@ -19,5 +20,6 @@ PYBIND11_MODULE(pymp, m) {
   build_planning_world(m);
   build_pyompl(m);
   build_pycontrol(m);
+  build_dubins(m);
   // build_pytopp(m);
 }
