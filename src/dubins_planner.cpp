@@ -27,7 +27,7 @@ void OMPLPlannerTpl<DATATYPE>::build_state_space(void) {
 
         // 0, 1, 2 will be dubins
         // skjfaslkdfjlasjfsl
-        auto dubins_space = std::make_shared<ob::DubinsStateSpace>(1.0);
+        auto dubins_space = std::make_shared<ob::DubinsStateSpace>(0.2);
         auto bound0 = model.getJointLimit(indices[0]);
         auto bound1 = model.getJointLimit(indices[1]);
         lower_joint_limits.push_back(bound0(0, 0));
@@ -43,6 +43,8 @@ void OMPLPlannerTpl<DATATYPE>::build_state_space(void) {
         bounds.setLow(1, bound1(0, 0));
         bounds.setHigh(1, bound1(0, 1));
         dubins_space->setBounds(bounds);
+
+        std::cout << "Dubins bounds " << bound0(0, 0) << " " << bound0(0, 1) << " " << bound1(0, 0) << " " << bound1(0, 1) << std::endl;
         cs->addSubspace(dubins_space, 1.0);
         dim_i = 3.;
         is_revolute.push_back(false);
@@ -82,6 +84,9 @@ void OMPLPlannerTpl<DATATYPE>::build_state_space(void) {
         ASSERT(dim_i == robot->getQposDim(), "Dim of bound is different from dim of qpos " +  std::to_string(dim_i) + " " + std::to_string(robot->getQposDim()));
         dim += dim_i;
     }
+
+    for(size_t j=0; j< dim; j++)
+        std::cout << "Joint " << j << " " << lower_joint_limits[j] << " " << upper_joint_limits[j] << " is revolute " << is_revolute[j] << std::endl;
 }
 
 
@@ -213,6 +218,7 @@ OMPLPlannerTpl<DATATYPE>::plan(VectorX const &start_state, std::vector<VectorX> 
             std::cout << "Solved!" << std::endl;
         ob::PathPtr path = pdef->getSolutionPath();
         auto geo_path = std::dynamic_pointer_cast<og::PathGeometric>(path);
+        geo_path->interpolate();
         size_t len = geo_path->getStateCount();
         Eigen::Matrix<DATATYPE, Eigen::Dynamic, Eigen::Dynamic> ret(len + invalid_start, dim);
         if (verbose)
