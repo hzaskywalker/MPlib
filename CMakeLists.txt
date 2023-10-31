@@ -26,6 +26,7 @@ include_directories("src")
 set(LIBS ompl fcl pinocchio assimp orocos-kdl Boost::system Boost::filesystem urdfdom_model urdfdom_world)
 
 file(GLOB_RECURSE PROJECT_SRC "src/*.h" "src/*.cpp" "src/*.hpp")
+link_directories("/usr/local/lib;/usr/local/share/")
 add_library(mp STATIC ${PROJECT_SRC})
 target_link_libraries(mp PRIVATE ${LIBS})
 set_target_properties(mp PROPERTIES POSITION_INDEPENDENT_CODE TRUE)

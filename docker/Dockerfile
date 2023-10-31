@@ -26,7 +26,7 @@ RUN wget https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_
     rm -rf /workspace/boost_1_76_0
 
 # OMPL
-RUN git clone --single-branch -b 1.5.0 --depth 1 --recurse-submodules https://github.com/ompl/ompl.git && \
+RUN git clone --single-branch -b main --depth 1 --recurse-submodules https://github.com/ompl/ompl.git && \
     cd ompl && mkdir build && cd build && \
     cmake .. && make -j && make install && \
     rm -rf /workspace/ompl
