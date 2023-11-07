@@ -4,7 +4,7 @@
 #include <ompl/geometric/PathSimplifier.h>
 #include <ompl/geometric/planners/rrt/RRTstar.h>
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
-//#include <ompl/geometric/PathSimplifier.h>
+#include <ompl/geometric/PathSimplifier.h>
 #include <ompl/util/RandomNumbers.h>
 #include <ompl/base/samplers/ObstacleBasedValidStateSampler.h>
 #include <ompl/base/SpaceInformation.h>
